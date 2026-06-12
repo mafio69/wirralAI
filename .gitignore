@@ -1,0 +1,5 @@
+/vendor/
+.env
+.local
+/var/database/
+/.idea/

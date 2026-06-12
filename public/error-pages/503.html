@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serwis niedostępny</title>
+    <style>
+        [v-cloak] { display: none; }
+        body {
+            margin: 0;
+            background: #000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #001100; }
+        ::-webkit-scrollbar-thumb { background: #003300; border-radius: 3px; }
+        .crt-glow { text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00; }
+        .crt-border { border: 1px solid #00ff00; }
+        .crt-text { color: #00ff00; }
+        .crt-dim { color: #006600; }
+        .crt-button {
+            display: inline-block;
+            background: #001100;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+        }
+        .crt-button:hover {
+            background: #002200;
+            box-shadow: 0 0 5px #00ff00;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 480px;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 0.5rem;
+        }
+        p {
+            font-size: 13px;
+            color: #006600;
+            line-height: 1.6;
+            margin: 0 0 1.5rem;
+        }
+        .footer {
+            font-size: 11px;
+            color: #003300;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container crt-border" style="background:#001100;">
+        <div class="icon crt-glow">⚡</div>
+        <h1 class="crt-glow">SERWIS TYMCZASOWO NIEDOSTĘPNY</h1>
+        <p>Wystąpił problem podczas uruchamiania aplikacji.<br>Prosimy spróbować ponownie za chwilę.</p>
+        <p>Jeśli problem będzie się powtarzał, skontaktuj się z administratorem.</p>
+        <a href="/" class="crt-button px-3 py-1" style="font-size:12px;padding:8px 24px;">&#x21BB; SPRÓBUJ PONOWNIE</a>
+        <div class="footer">[ERROR 503]</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WirralAI — Panel API</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f6fa; color: #2d3436; min-height: 100vh; }
+nav { background: #2d3436; color: #fff; padding: 0 24px; display: flex; align-items: center; gap: 32px; height: 56px; }
+nav h1 { font-size: 18px; font-weight: 600; }
+nav a { color: #b2bec3; text-decoration: none; font-size: 14px; cursor: pointer; padding: 4px 0; border-bottom: 2px solid transparent; transition: .15s; }
+nav a:hover, nav a.active { color: #fff; border-bottom-color: #00b894; }
+.container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.section { display: none; }
+.section.active { display: block; }
+.card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.06); padding: 24px; margin-bottom: 20px; }
+.card h2 { font-size: 18px; margin-bottom: 16px; color: #2d3436; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+.field { flex: 1; min-width: 180px; }
+.field label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #636e72; margin-bottom: 4px; }
+.field input, .field select, .field textarea { width: 100%; padding: 8px 12px; border: 1.5px solid #dfe6e9; border-radius: 6px; font-size: 14px; outline: none; transition: .15s; background: #fff; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: #00b894; }
+.field textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+button { padding: 8px 18px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: .15s; white-space: nowrap; }
+.btn-primary { background: #00b894; color: #fff; }
+.btn-primary:hover { background: #00a381; }
+.btn-danger { background: #d63031; color: #fff; }
+.btn-danger:hover { background: #b71c1c; }
+.btn-outline { background: transparent; border: 1.5px solid #dfe6e9; color: #636e72; }
+.btn-outline:hover { border-color: #00b894; color: #00b894; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+pre { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px; font-size: 12px; overflow-x: auto; max-height: 300px; white-space: pre-wrap; word-break: break-all; }
+pre.error { color: #d63031; background: #fff5f5; border-color: #fab1b1; }
+pre.success { color: #00b894; background: #f0fff4; border-color: #81ecec; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+.badge-auth { background: #6c5ce7; color: #fff; }
+.badge-ok { background: #00b894; color: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #f1f2f6; }
+th { font-size: 12px; text-transform: uppercase; color: #636e72; font-weight: 600; background: #f8f9fa; }
+tr:hover td { background: #f8f9fa; }
+.actions { display: flex; gap: 6px; }
+.empty { text-align: center; color: #b2bec3; padding: 32px; font-size: 14px; }
+.mt-2 { margin-top: 12px; }
+.mb-2 { margin-bottom: 12px; }
+.flex { display: flex; gap: 12px; align-items: center; }
+.justify-between { display: flex; justify-content: space-between; align-items: center; }
+#chat-messages { max-height: 500px; overflow-y: auto; }
+.msg { padding: 10px 14px; margin-bottom: 8px; border-radius: 8px; font-size: 14px; }
+.msg.user { background: #dfe6e9; margin-left: 32px; }
+.msg.assistant { background: #e8f8f5; border-left: 3px solid #00b894; }
+.msg .meta { font-size: 11px; color: #636e72; margin-bottom: 4px; }
+.msg .role { font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: .5px; }
+.auth-status { padding: 8px 16px; border-radius: 6px; background: #dfe6e9; font-size: 13px; font-weight: 500; }
+.auth-status.logged-in { background: #e8f8f5; color: #00b894; }
+.auth-status.logged-out { background: #ffeaa7; color: #d68910; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>WirralAI</h1>
+  <a class="active" data-section="auth" onclick="showSection('auth')">Auth</a>
+  <a data-section="tasks" onclick="showSection('tasks')">Zadania</a>
+  <a data-section="chats" onclick="showSection('chats')">Czaty</a>
+  <span style="flex:1"></span>
+  <span id="auth-indicator" class="auth-status logged-out">❌ Niezalogowany</span>
+</nav>
+
+<div class="container">
+
+<!-- ==================== AUTH ==================== -->
+<div id="section-auth" class="section active">
+  <div class="card">
+    <h2>Rejestracja</h2>
+    <div class="row">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="user@example.com">
+      </div>
+      <div class="field">
+        <label>Hasło</label>
+        <input type="password" id="reg-password" placeholder="min. 6 znaków">
+      </div>
+      <button class="btn-primary" onclick="register()">Zarejestruj</button>
+    </div>
+    <pre id="reg-result" class="mt-2"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Logowanie</h2>
+    <div class="row">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="user@example.com">
+      </div>
+      <div class="field">
+        <label>Hasło</label>
+        <input type="password" id="login-password" placeholder="••••••">
+      </div>
+      <button class="btn-primary" onclick="login()">Zaloguj</button>
+    </div>
+    <pre id="login-result" class="mt-2"></pre>
+  </div>
+
+  <div class="card">
+    <div class="justify-between">
+      <h2>Mój profil</h2>
+      <button class="btn-outline btn-sm" onclick="getMe()">Pobierz profil</button>
+    </div>
+    <pre id="me-result" class="mt-2"></pre>
+  </div>
+</div>
+
+<!-- ==================== TASKS ==================== -->
+<div id="section-tasks" class="section">
+  <div class="card">
+    <div class="justify-between mb-2">
+      <h2 style="margin:0">Lista zadań</h2>
+      <button class="btn-primary btn-sm" onclick="listTasks()">Odśwież</button>
+    </div>
+    <table>
+      <thead><tr><th>ID</th><th>Tytuł</th><th>Status</th><th>Opis</th><th>Akcje</th></tr></thead>
+      <tbody id="tasks-tbody"></tbody>
+    </table>
+    <pre id="tasks-result" class="mt-2"></pre>
+  </div>
+
+  <div class="card">
+    <h2>Nowe zadanie</h2>
+    <div class="row">
+      <div class="field">
+        <label>Tytuł</label>
+        <input type="text" id="task-title" placeholder="Nazwa zadania">
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="task-status">
+          <option value="todo">Do zrobienia</option>
+          <option value="in_progress">W trakcie</option>
+          <option value="done">Zrobione</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="createTask()">Dodaj</button>
+    </div>
+    <div class="field mt-2">
+      <label>Opis</label>
+      <textarea id="task-desc" placeholder="Opis zadania (opcjonalnie)"></textarea>
+    </div>
+    <pre id="task-create-result" class="mt-2"></pre>
+  </div>
+</div>
+
+<!-- ==================== CHATS ==================== -->
+<div id="section-chats" class="section">
+  <div class="card">
+    <div class="justify-between mb-2">
+      <h2 style="margin:0">Czaty</h2>
+      <button class="btn-primary btn-sm" onclick="listChats()">Odśwież</button>
+    </div>
+    <div class="row mb-2">
+      <div class="field" style="flex:3">
+        <label>Tytuł nowego czatu</label>
+        <input type="text" id="chat-title" placeholder="Nazwa czatu">
+      </div>
+      <button class="btn-primary" onclick="createChat()">Utwórz czat</button>
+    </div>
+    <table>
+      <thead><tr><th>ID</th><th>Tytuł</th><th>Utworzono</th><th>Akcje</th></tr></thead>
+      <tbody id="chats-tbody"></tbody>
+    </table>
+    <pre id="chats-result" class="mt-2"></pre>
+  </div>
+
+  <div class="card" id="chat-detail" style="display:none">
+    <div class="justify-between mb-2">
+      <h2 id="chat-detail-title" style="margin:0">Czat</h2>
+      <button class="btn-outline btn-sm" onclick="closeChatDetail()">Zamknij</button>
+    </div>
+    <div id="chat-messages"></div>
+    <div class="row mt-2">
+      <div class="field" style="flex:4">
+        <label>Wiadomość</label>
+        <input type="text" id="chat-msg-input" placeholder="Treść wiadomości">
+      </div>
+      <button class="btn-primary" onclick="addMessage()">Wyślij</button>
+    </div>
+    <pre id="chat-msg-result" class="mt-2"></pre>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ==================== STATE ====================
+let token = localStorage.getItem('token') || '';
+let currentChatId = null;
+
+function isAuth() { return token.length > 0; }
+
+function updateAuthUI() {
+  const el = document.getElementById('auth-indicator');
+  if (isAuth()) {
+    el.className = 'auth-status logged-in';
+    el.textContent = '✅ Zalogowano';
+  } else {
+    el.className = 'auth-status logged-out';
+    el.textContent = '❌ Niezalogowany';
+  }
+}
+
+function authHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (isAuth()) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.querySelector('nav a[data-section="' + name + '"]').classList.add('active');
+}
+
+function show(el, msg, cls) {
+  el.style.display = 'block';
+  el.className = cls || '';
+  el.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2);
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: authHeaders() };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch('/api' + path, opts);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ==================== AUTH ====================
+async function register() {
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+  const r = await api('POST', '/auth/register', { email, password });
+  show(document.getElementById('reg-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const r = await api('POST', '/auth/login', { email, password });
+  if (r.ok && r.data.token) {
+    token = r.data.token;
+    localStorage.setItem('token', token);
+    updateAuthUI();
+  }
+  show(document.getElementById('login-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+}
+
+async function getMe() {
+  if (!isAuth()) { show(document.getElementById('me-result'), 'Brak tokena — zaloguj się', 'error'); return; }
+  const r = await api('GET', '/auth/me');
+  show(document.getElementById('me-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+}
+
+// ==================== TASKS ====================
+async function listTasks() {
+  if (!isAuth()) { show(document.getElementById('tasks-result'), 'Zaloguj się', 'error'); return; }
+  const r = await api('GET', '/tasks');
+  const tbody = document.getElementById('tasks-tbody');
+  tbody.innerHTML = '';
+  if (r.ok && Array.isArray(r.data)) {
+    if (r.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">Brak zadań</td></tr>';
+    } else {
+      r.data.forEach(t => {
+        tbody.innerHTML += `<tr>
+          <td>${t.id}</td>
+          <td>${esc(t.title)}</td>
+          <td>${esc(t.status)}</td>
+          <td>${esc(t.description || '')}</td>
+          <td class="actions">
+            <button class="btn-outline btn-sm" onclick="editTask(${t.id})">Edytuj</button>
+            <button class="btn-danger btn-sm" onclick="deleteTask(${t.id})">Usuń</button>
+          </td>
+        </tr>`;
+      });
+    }
+  }
+  show(document.getElementById('tasks-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+}
+
+async function createTask() {
+  if (!isAuth()) { show(document.getElementById('task-create-result'), 'Zaloguj się', 'error'); return; }
+  const title = document.getElementById('task-title').value;
+  const status = document.getElementById('task-status').value;
+  const description = document.getElementById('task-desc').value || null;
+  const r = await api('POST', '/tasks', { title, status, description });
+  show(document.getElementById('task-create-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+  if (r.ok) { listTasks(); document.getElementById('task-title').value = ''; document.getElementById('task-desc').value = ''; }
+}
+
+async function editTask(id) {
+  const title = prompt('Nowy tytuł:');
+  if (!title) return;
+  const status = prompt('Nowy status (todo / in_progress / done):', 'todo');
+  if (!status) return;
+  const description = prompt('Nowy opis (lub puste):');
+  const r = await api('PUT', '/tasks/' + id, { title, status, description: description || null });
+  show(document.getElementById('tasks-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+  if (r.ok) listTasks();
+}
+
+async function deleteTask(id) {
+  if (!confirm('Usunąć zadanie #' + id + '?')) return;
+  const r = await api('DELETE', '/tasks/' + id);
+  show(document.getElementById('tasks-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+  if (r.ok) listTasks();
+}
+
+// ==================== CHATS ====================
+async function listChats() {
+  if (!isAuth()) { show(document.getElementById('chats-result'), 'Zaloguj się', 'error'); return; }
+  const r = await api('GET', '/chats');
+  const tbody = document.getElementById('chats-tbody');
+  tbody.innerHTML = '';
+  if (r.ok && Array.isArray(r.data)) {
+    if (r.data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">Brak czatów</td></tr>';
+    } else {
+      r.data.forEach(c => {
+        tbody.innerHTML += `<tr>
+          <td>${c.id}</td>
+          <td>${esc(c.title)}</td>
+          <td>${esc(c.createdAt || '')}</td>
+          <td><button class="btn-primary btn-sm" onclick="openChat(${c.id})">Otwórz</button></td>
+        </tr>`;
+      });
+    }
+  }
+  show(document.getElementById('chats-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+}
+
+async function createChat() {
+  if (!isAuth()) { show(document.getElementById('chats-result'), 'Zaloguj się', 'error'); return; }
+  const title = document.getElementById('chat-title').value;
+  if (!title) { show(document.getElementById('chats-result'), 'Podaj tytuł czatu', 'error'); return; }
+  const r = await api('POST', '/chats', { title });
+  show(document.getElementById('chats-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+  if (r.ok) { listChats(); document.getElementById('chat-title').value = ''; }
+}
+
+async function openChat(id) {
+  if (!isAuth()) return;
+  currentChatId = id;
+  const r = await api('GET', '/chats/' + id);
+  if (r.ok) {
+    const chat = r.data;
+    document.getElementById('chat-detail').style.display = 'block';
+    document.getElementById('chat-detail-title').textContent = 'Czat: ' + (chat.title || '#' + id);
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = '';
+    const msgs = chat.messages || [];
+    if (msgs.length === 0) {
+      container.innerHTML = '<div class="empty">Brak wiadomości</div>';
+    } else {
+      msgs.forEach(m => {
+        container.innerHTML += `<div class="msg ${m.role}">
+          <div class="meta"><span class="role">${esc(m.role)}</span> · ${esc(m.created_at || '')}</div>
+          <div>${esc(m.content)}</div>
+        </div>`;
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+  show(document.getElementById('chat-msg-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+}
+
+function closeChatDetail() {
+  currentChatId = null;
+  document.getElementById('chat-detail').style.display = 'none';
+}
+
+async function addMessage() {
+  if (!currentChatId) return;
+  const content = document.getElementById('chat-msg-input').value;
+  if (!content) return;
+  const r = await api('POST', '/chats/' + currentChatId + '/messages', { content });
+  show(document.getElementById('chat-msg-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+  if (r.ok) {
+    document.getElementById('chat-msg-input').value = '';
+    openChat(currentChatId);
+  }
+}
+
+// ==================== HELPERS ====================
+function esc(s) {
+  if (s == null) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// ==================== INIT ====================
+updateAuthUI();
+if (isAuth()) { listTasks(); listChats(); }
+</script>
+</body>
+</html>

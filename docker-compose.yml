@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    container_name: slim_ovh_ai_app
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    environment:
+      PHP_IDE_CONFIG: serverName=slim-ovh-ai
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: slim_ovh_ai_nginx
+    ports:
+      - "8181:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on:
+      - app

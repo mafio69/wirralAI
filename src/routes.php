@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+use Slim\App;
+use App\Controller\AuthController;
+use App\Controller\ChatController;
+use App\Controller\TaskController;
+use Slim\Routing\RouteCollectorProxy;
+
+return function (App $app) {
+    $app->get('/', function ($request, $response) {
+        $body = $response->getBody();
+        $body->write(file_get_contents(__DIR__ . '/../public/ui/index.html'));
+        return $response->withHeader('Content-Type', 'text/html');
+    });
+
+    $app->group('/api', function (RouteCollectorProxy $group) {
+        // Auth
+        $group->post('/auth/register', [AuthController::class, 'register']);
+        $group->post('/auth/login', [AuthController::class, 'login']);
+        $group->get('/auth/me', [AuthController::class, 'me']);
+
+        // Tasks
+        $group->get('/tasks', [TaskController::class, 'list']);
+        $group->post('/tasks', [TaskController::class, 'create']);
+        $group->put('/tasks/{id}', [TaskController::class, 'update']);
+        $group->delete('/tasks/{id}', [TaskController::class, 'delete']);
+
+        // Chats
+        $group->get('/chats', [ChatController::class, 'list']);
+        $group->post('/chats', [ChatController::class, 'create']);
+        $group->get('/chats/{id}', [ChatController::class, 'get']);
+        $group->post('/chats/{id}/messages', [ChatController::class, 'addMessage']);
+    });
+};
