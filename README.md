@@ -145,4 +145,4 @@ composer test
 
 - PHP 8.4
 - Composer
-- Docker i Docker Compose
+- Docker i Docker Compose# wirralAI
