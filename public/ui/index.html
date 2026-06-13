@@ -11,6 +11,20 @@ nav { background: #2d3436; color: #fff; padding: 0 24px; display: flex; align-it
 nav h1 { font-size: 18px; font-weight: 600; }
 nav a { color: #b2bec3; text-decoration: none; font-size: 14px; cursor: pointer; padding: 4px 0; border-bottom: 2px solid transparent; transition: .15s; }
 nav a:hover, nav a.active { color: #fff; border-bottom-color: #00b894; }
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #00b894;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
 .section { display: none; }
 .section.active { display: block; }
@@ -184,8 +198,12 @@ tr:hover td { background: #f8f9fa; }
         <label>Wiadomość</label>
         <input type="text" id="chat-msg-input" placeholder="Treść wiadomości">
       </div>
-      <button class="btn-primary" onclick="addMessage()">Wyślij</button>
+      <button class="btn-primary" onclick="addMessage()" id="send-button">Wyślij</button>
       <button class="btn-outline" id="toggle-send-enter" onclick="toggleSendOnEnter()">Enter: Wyślij</button>
+    </div>
+    <div id="loading-indicator" style="display: none; margin-top: 10px;">
+      <span class="loading"></span>
+      <span>Oczekiwanie na odpowiedź AI...</span>
     </div>
     <pre id="chat-msg-result" class="mt-2"></pre>
   </div>
@@ -395,11 +413,22 @@ async function addMessage() {
   if (!currentChatId) return;
   const content = document.getElementById('chat-msg-input').value;
   if (!content) return;
-  const r = await api('POST', '/chats/' + currentChatId + '/messages', { content });
-  show(document.getElementById('chat-msg-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
-  if (r.ok) {
-    document.getElementById('chat-msg-input').value = '';
-    openChat(currentChatId);
+  
+  // Pokaż animację ładowania
+  document.getElementById('loading-indicator').style.display = 'block';
+  document.getElementById('send-button').disabled = true;
+  
+  try {
+    const r = await api('POST', '/chats/' + currentChatId + '/messages', { content });
+    show(document.getElementById('chat-msg-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+    if (r.ok) {
+      document.getElementById('chat-msg-input').value = '';
+      openChat(currentChatId);
+    }
+  } finally {
+    // Ukryj animację ładowania
+    document.getElementById('loading-indicator').style.display = 'none';
+    document.getElementById('send-button').disabled = false;
   }
 }
 
