@@ -85,43 +85,50 @@ final readonly class ChatService
             throw new NotFoundException('Chat not found');
         }
 
-        $messageId = $this->chatRepository->addMessage(
+        // Prepare messages for batch insert
+        $messages = [];
+        
+        // Add user message
+        $userMessageId = $this->chatRepository->addMessage(
             $input->chatId,
             'user',
             $input->content,
         );
-
+        
         $userMessage = [
-            'id' => $messageId,
+            'id' => $userMessageId,
             'chat_id' => $input->chatId,
             'role' => 'user',
             'content' => $input->content,
             'created_at' => date('Y-m-d H:i:s'),
         ];
+        
+        $messages[] = $userMessage;
 
         $history = $this->chatRepository->findMessagesByChatId($input->chatId);
 
-        $messages = [];
+        $messageHistory = [];
         foreach ($history as $msg) {
-            $messages[] = [
+            $messageHistory[] = [
                 'role' => $msg['role'],
                 'content' => $msg['content'],
             ];
         }
 
+        // Add assistant message
         try {
-            $aiContent = $this->ovhAiClient->generate($messages);
+            $aiContent = $this->ovhAiClient->generate($messageHistory);
         } catch (\Throwable $e) {
             $this->logger->error('AI call failed', ['chat_id' => $input->chatId, 'exception' => $e]);
             throw $e;
         }
-
+        
         $aiMessageId = $this->chatRepository->addMessage(
             $input->chatId,
             'assistant',
             $aiContent,
         );
-
+        
         $assistantMessage = [
             'id' => $aiMessageId,
             'chat_id' => $input->chatId,
@@ -129,7 +136,10 @@ final readonly class ChatService
             'content' => $aiContent,
             'created_at' => date('Y-m-d H:i:s'),
         ];
+        
+        $messages[] = $assistantMessage;
 
+        // Return both messages
         return [$userMessage, $assistantMessage];
     }
 }

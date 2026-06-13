@@ -16,7 +16,7 @@ final readonly class TaskRepository
     {
         $stmt = $this->pdo->prepare(
             'INSERT INTO tasks (user_id, title, description, status, created_at, updated_at)
-             VALUES (:user_id, :title, :description, :status, :created_at, :updated_at)'
+              VALUES (:user_id, :title, :description, :status, :created_at, :updated_at)'
         );
         $stmt->execute([
             'user_id' => $userId,
@@ -34,7 +34,7 @@ final readonly class TaskRepository
     {
         $stmt = $this->pdo->prepare(
             'SELECT id, user_id, title, description, status, created_at, updated_at
-             FROM tasks WHERE user_id = :user_id ORDER BY created_at DESC'
+              FROM tasks WHERE user_id = :user_id ORDER BY created_at DESC'
         );
         $stmt->execute(['user_id' => $userId]);
 
@@ -45,7 +45,7 @@ final readonly class TaskRepository
     {
         $stmt = $this->pdo->prepare(
             'SELECT id, user_id, title, description, status, created_at, updated_at
-             FROM tasks WHERE id = :id'
+              FROM tasks WHERE id = :id'
         );
         $stmt->execute(['id' => $id]);
 
@@ -58,7 +58,7 @@ final readonly class TaskRepository
     {
         $stmt = $this->pdo->prepare(
             'UPDATE tasks SET title = :title, description = :description, status = :status, updated_at = :updated_at
-             WHERE id = :id'
+              WHERE id = :id'
         );
         $stmt->execute([
             'id' => $id,
@@ -73,5 +73,39 @@ final readonly class TaskRepository
     {
         $stmt = $this->pdo->prepare('DELETE FROM tasks WHERE id = :id');
         $stmt->execute(['id' => $id]);
+    }
+
+    /**
+     * Batch insert for tasks
+     */
+    public function createBatch(array $tasks): array
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO tasks (user_id, title, description, status, created_at, updated_at)
+                  VALUES (:user_id, :title, :description, :status, :created_at, :updated_at)'
+            );
+            
+            $ids = [];
+            foreach ($tasks as $task) {
+                $stmt->execute([
+                    'user_id' => $task['user_id'],
+                    'title' => $task['title'],
+                    'description' => $task['description'],
+                    'status' => $task['status'],
+                    'created_at' => $task['created_at'],
+                    'updated_at' => $task['updated_at'],
+                ]);
+                
+                $ids[] = (int)$this->pdo->lastInsertId();
+            }
+            
+            $this->pdo->commit();
+            return $ids;
+        } catch (\Throwable $e) {
+            $this->pdo->rollback();
+            throw $e;
+        }
     }
 }

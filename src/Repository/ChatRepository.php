@@ -72,4 +72,31 @@ final readonly class ChatRepository
 
         return $stmt->fetchAll();
     }
+
+    /**
+     * Batch insert for chat messages
+     */
+    public function addMessagesBatch(array $messages): void
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO chat_messages (chat_id, role, content, created_at) VALUES (:chat_id, :role, :content, :created_at)'
+            );
+            
+            foreach ($messages as $message) {
+                $stmt->execute([
+                    'chat_id' => $message['chat_id'],
+                    'role' => $message['role'],
+                    'content' => $message['content'],
+                    'created_at' => $message['created_at'],
+                ]);
+            }
+            
+            $this->pdo->commit();
+        } catch (\Throwable $e) {
+            $this->pdo->rollback();
+            throw $e;
+        }
+    }
 }
