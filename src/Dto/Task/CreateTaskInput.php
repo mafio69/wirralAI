@@ -11,5 +11,6 @@ final readonly class CreateTaskInput
         public string $title,
         public ?string $description,
         public string $status
-    ) {}
+    ) {
+    }
 }

@@ -2,16 +2,24 @@
 
 declare(strict_types=1);
 
-use Slim\App;
 use App\Controller\AuthController;
 use App\Controller\ChatController;
 use App\Controller\TaskController;
+use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
 return function (App $app) {
     $app->get('/', function ($request, $response) {
         $body = $response->getBody();
-        $body->write(file_get_contents(__DIR__ . '/../public/ui/index.html'));
+        $body->write(file_get_contents(__DIR__.'/../public/ui/landing.html'));
+
+        return $response->withHeader('Content-Type', 'text/html');
+    });
+
+    $app->get('/test-api', function ($request, $response) {
+        $body = $response->getBody();
+        $body->write(file_get_contents(__DIR__.'/../public/ui/index.html'));
+
         return $response->withHeader('Content-Type', 'text/html');
     });
 
@@ -20,6 +28,7 @@ return function (App $app) {
         $group->post('/auth/register', [AuthController::class, 'register']);
         $group->post('/auth/login', [AuthController::class, 'login']);
         $group->get('/auth/me', [AuthController::class, 'me']);
+        $group->get('/auth/verify-email', [AuthController::class, 'verifyEmail']);
 
         // Tasks
         $group->get('/tasks', [TaskController::class, 'list']);

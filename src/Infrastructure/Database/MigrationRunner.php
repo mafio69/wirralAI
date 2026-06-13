@@ -61,5 +61,18 @@ CREATE TABLE IF NOT EXISTS tasks (
 SQL;
 
         $this->pdo->exec($sql);
+
+        $this->addColumnIfNotExists('users', 'email_verification_token', 'TEXT DEFAULT NULL');
+        $this->addColumnIfNotExists('users', 'email_confirmed_at', 'TEXT DEFAULT NULL');
+    }
+
+    private function addColumnIfNotExists(string $table, string $column, string $definition): void
+    {
+        $stmt = $this->pdo->query("PRAGMA table_info($table)");
+        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN, 1);
+
+        if (!in_array($column, $columns, true)) {
+            $this->pdo->exec("ALTER TABLE $table ADD COLUMN $column $definition");
+        }
     }
 }

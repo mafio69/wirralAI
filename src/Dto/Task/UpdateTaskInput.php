@@ -12,5 +12,6 @@ final readonly class UpdateTaskInput
         public string $title,
         public ?string $description,
         public string $status,
-    ) {}
+    ) {
+    }
 }

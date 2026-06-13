@@ -9,5 +9,6 @@ final readonly class RegisterInput
     public function __construct(
         public string $email,
         public string $password
-    ) {}
+    ) {
+    }
 }

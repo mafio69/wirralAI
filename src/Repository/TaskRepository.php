@@ -27,7 +27,7 @@ final readonly class TaskRepository
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return (int) $this->pdo->lastInsertId();
+        return (int)$this->pdo->lastInsertId();
     }
 
     public function findByUserId(int $userId): array

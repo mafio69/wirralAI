@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WirralAI</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f6fa; color: #2d3436; min-height: 100vh; }
+nav { background: #2d3436; color: #fff; padding: 0 24px; display: flex; align-items: center; gap: 32px; height: 56px; }
+nav h1 { font-size: 18px; font-weight: 600; }
+nav a { color: #b2bec3; text-decoration: none; font-size: 14px; cursor: pointer; padding: 4px 0; border-bottom: 2px solid transparent; transition: .15s; }
+nav a:hover, nav a.active { color: #fff; border-bottom-color: #00b894; }
+.container { max-width: 900px; margin: 0 auto; padding: 40px 24px; text-align: center; }
+.card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.06); padding: 32px; margin-bottom: 20px; max-width: 420px; margin-left: auto; margin-right: auto; text-align: left; }
+.hero { padding: 60px 0 40px; }
+.hero h2 { font-size: 32px; font-weight: 700; color: #2d3436; }
+.hero p { color: #636e72; font-size: 16px; margin-top: 8px; }
+.hero-buttons { margin-top: 24px; display: flex; gap: 12px; justify-content: center; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #636e72; margin-bottom: 4px; }
+.field input, .field select { width: 100%; padding: 10px 14px; border: 1.5px solid #dfe6e9; border-radius: 6px; font-size: 14px; outline: none; transition: .15s; background: #fff; }
+.field input:focus { border-color: #00b894; }
+.field-row { display: flex; gap: 8px; align-items: center; }
+.field-row input[type=checkbox] { width: auto; }
+button { padding: 10px 24px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: .15s; white-space: nowrap; }
+.btn-primary { background: #00b894; color: #fff; }
+.btn-primary:hover { background: #00a381; }
+.btn-outline { background: transparent; border: 1.5px solid #dfe6e9; color: #636e72; }
+.btn-outline:hover { border-color: #00b894; color: #00b894; }
+.btn-lg { padding: 14px 36px; font-size: 16px; }
+.card h2 { font-size: 18px; margin-bottom: 16px; color: #2d3436; }
+.card h3 { font-size: 14px; color: #636e72; margin-bottom: 4px; }
+pre { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin-top: 12px; }
+pre.error { color: #d63031; background: #fff5f5; border-color: #fab1b1; }
+pre.success { color: #00b894; background: #f0fff4; border-color: #81ecec; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; text-align: center; }
+.dashboard-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.06); padding: 32px 24px; cursor: pointer; transition: .15s; text-decoration: none; color: inherit; display: block; }
+.dashboard-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+.dashboard-card .icon { font-size: 32px; margin-bottom: 8px; }
+.dashboard-card h3 { font-size: 16px; font-weight: 600; color: #2d3436; }
+.dashboard-card p { font-size: 13px; color: #636e72; margin-top: 4px; }
+.hidden { display: none; }
+.text-center { text-align: center; }
+.mt-2 { margin-top: 12px; }
+.mb-2 { margin-bottom: 12px; }
+.auth-status { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+.auth-status.logged-in { background: #e8f8f5; color: #00b894; }
+.auth-status.logged-out { background: #ffeaa7; color: #d68910; }
+.link { color: #00b894; cursor: pointer; text-decoration: underline; font-size: 13px; }
+.link:hover { color: #00a381; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>WirralAI</h1>
+  <span style="flex:1"></span>
+  <span id="auth-indicator" class="auth-status logged-out">Niezalogowany</span>
+</nav>
+
+<div class="container" id="landing-view">
+  <div class="hero">
+    <h2>WirralAI</h2>
+    <p>Platforma z AI — zadania, czaty, integracje</p>
+    <div class="hero-buttons" id="hero-buttons">
+      <button class="btn-primary btn-lg" onclick="showForm('register')">Rejestracja</button>
+      <button class="btn-outline btn-lg" onclick="showForm('login')">Zaloguj się</button>
+    </div>
+  </div>
+</div>
+
+<div class="container hidden" id="dashboard-view">
+  <h2 style="font-size:24px; margin-bottom:4px;">Witaj, <span id="user-email">—</span></h2>
+  <p style="color:#636e72; font-size:14px;">Wybierz sekcję</p>
+  <div class="dashboard-grid">
+    <a class="dashboard-card" href="/test-api">
+      <div class="icon">🔌</div>
+      <h3>Test API</h3>
+      <p>Ręczne testowanie endpointów</p>
+    </a>
+    <a class="dashboard-card" href="/test-api" onclick="switchSection('tasks'); return false;">
+      <div class="icon">📋</div>
+      <h3>Zadania</h3>
+      <p>Zarządzanie listą zadań</p>
+    </a>
+    <a class="dashboard-card" href="/test-api" onclick="switchSection('chats'); return false;">
+      <div class="icon">💬</div>
+      <h3>Czat AI</h3>
+      <p>Rozmowa z modelem AI</p>
+    </a>
+  </div>
+  <p style="margin-top:24px;"><a class="link" href="#" onclick="logout(); return false;">Wyloguj się</a></p>
+</div>
+
+<!-- Register form modal -->
+<div class="container hidden" id="register-form">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0">Rejestracja</h2>
+      <span class="link" onclick="hideForms()">✕ zamknij</span>
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="user@example.com">
+    </div>
+    <div class="field">
+      <label>Hasło</label>
+      <input type="password" id="reg-password" placeholder="min. 6 znaków">
+    </div>
+    <button class="btn-primary" onclick="register()" style="width:100%">Zarejestruj</button>
+    <pre id="reg-result" class="mt-2 hidden"></pre>
+    <p class="text-center mt-2" style="font-size:13px;color:#636e72;">
+      Masz konto? <span class="link" onclick="showForm('login')">Zaloguj się</span>
+    </p>
+  </div>
+</div>
+
+<!-- Login form modal -->
+<div class="container hidden" id="login-form">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0">Logowanie</h2>
+      <span class="link" onclick="hideForms()">✕ zamknij</span>
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="user@example.com">
+    </div>
+    <div class="field">
+      <label>Hasło</label>
+      <input type="password" id="login-password" placeholder="••••••">
+    </div>
+    <div class="field field-row">
+      <input type="checkbox" id="login-remember">
+      <label style="font-size:13px;text-transform:none;margin:0;cursor:pointer;">Zapamiętaj mnie na 30 dni</label>
+    </div>
+    <button class="btn-primary" onclick="login()" style="width:100%">Zaloguj</button>
+    <pre id="login-result" class="mt-2 hidden"></pre>
+    <p class="text-center mt-2" style="font-size:13px;color:#636e72;">
+      Nie masz konta? <span class="link" onclick="showForm('register')">Zarejestruj się</span>
+    </p>
+  </div>
+</div>
+
+<script>
+let token = '';
+
+function getToken() {
+  if (token) return token;
+  const match = document.cookie.match(/(?:^|;\s*)token=([^;]*)/);
+  return match ? match[1] : '';
+}
+
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  const t = getToken();
+  if (t) opts.headers['Authorization'] = 'Bearer ' + t;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch('/api' + path, opts);
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  return { ok: res.ok, status: res.status, data };
+}
+
+function showLoading(msg) {
+  if (msg) return '<span style="color:#636e72">' + msg + '</span>';
+  return '';
+}
+
+function show(el, msg, cls) {
+  el.classList.remove('hidden', 'success', 'error');
+  if (cls) el.classList.add(cls);
+  el.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2);
+}
+
+function hideForms() {
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('landing-view').classList.remove('hidden');
+}
+
+function showForm(name) {
+  document.getElementById('landing-view').classList.add('hidden');
+  document.getElementById('dashboard-view').classList.add('hidden');
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById(name + '-form').classList.remove('hidden');
+  document.getElementById(name + '-result').classList.add('hidden');
+}
+
+function switchSection(name) {
+  localStorage.setItem('spa_section', name);
+}
+
+async function register() {
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+  const r = await api('POST', '/auth/register', { email, password });
+  const el = document.getElementById('reg-result');
+  el.classList.remove('hidden');
+  if (r.ok) {
+    el.textContent = '✅ Konto utworzone! Sprawdź email aby potwierdzić rejestrację.';
+    el.className = 'mt-2 success';
+  } else {
+    show(el, r.data, 'error');
+  }
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const rememberMe = document.getElementById('login-remember').checked;
+  const r = await api('POST', '/auth/login', { email, password, remember_me: rememberMe });
+  const el = document.getElementById('login-result');
+  el.classList.remove('hidden');
+  if (r.ok && r.data.token) {
+    token = r.data.token;
+    await loadDashboard();
+  } else {
+    show(el, r.data, 'error');
+  }
+}
+
+async function loadDashboard() {
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('landing-view').classList.add('hidden');
+  document.getElementById('dashboard-view').classList.remove('hidden');
+
+  const indicator = document.getElementById('auth-indicator');
+  indicator.className = 'auth-status logged-in';
+  indicator.textContent = '✅ Zalogowano';
+
+  const r = await api('GET', '/auth/me');
+  if (r.ok) {
+    document.getElementById('user-email').textContent = r.data.email || '—';
+  }
+}
+
+function logout() {
+  token = '';
+  document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  document.getElementById('dashboard-view').classList.add('hidden');
+  document.getElementById('landing-view').classList.remove('hidden');
+  document.getElementById('hero-buttons').classList.remove('hidden');
+  const indicator = document.getElementById('auth-indicator');
+  indicator.className = 'auth-status logged-out';
+  indicator.textContent = 'Niezalogowany';
+}
+
+(async function init() {
+  const t = getToken();
+  if (t) {
+    token = t;
+    const r = await api('GET', '/auth/me');
+    if (r.ok) {
+      await loadDashboard();
+    }
+  }
+})();
+</script>
+</body>
+</html>

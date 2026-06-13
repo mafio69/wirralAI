@@ -14,5 +14,6 @@ final readonly class TaskResult
         public string $status,
         public string $createdAt,
         public string $updatedAt,
-    ) {}
+    ) {
+    }
 }

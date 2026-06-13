@@ -22,6 +22,10 @@ final readonly class LoginInputMapper
             throw new ValidationException('Password is required');
         }
 
-        return new LoginInput(trim($email), $password);
+        return new LoginInput(
+            email: trim($email),
+            password: $password,
+            rememberMe: !empty($data['remember_me']),
+        );
     }
 }

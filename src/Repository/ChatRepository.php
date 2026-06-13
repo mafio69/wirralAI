@@ -23,7 +23,7 @@ final readonly class ChatRepository
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return (int) $this->pdo->lastInsertId();
+        return (int)$this->pdo->lastInsertId();
     }
 
     public function findByUserId(int $userId): array
@@ -60,7 +60,7 @@ final readonly class ChatRepository
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return (int) $this->pdo->lastInsertId();
+        return (int)$this->pdo->lastInsertId();
     }
 
     public function findMessagesByChatId(int $chatId): array

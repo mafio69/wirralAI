@@ -15,7 +15,7 @@ use Slim\Psr7\Response;
 return function (App $app) {
     $app->addBodyParsingMiddleware();
     $app->addRoutingMiddleware();
-    
+
     // Custom Error Handling Middleware
     $app->add(function (ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
         try {
@@ -23,16 +23,19 @@ return function (App $app) {
         } catch (ValidationException $e) {
             $response = new Response();
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+
             return $response->withStatus(422)->withHeader('Content-Type', 'application/json');
         } catch (UnauthorizedException $e) {
             $response = new Response();
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-        } catch (NotFoundException | HttpNotFoundException $e) {
+        } catch (NotFoundException|HttpNotFoundException $e) {
             $response = new Response();
             $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+
             return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $response = new Response();
             $error = ['error' => 'Internal Server Error'];
             if ($_ENV['APP_ENV'] === 'dev') {
@@ -40,6 +43,7 @@ return function (App $app) {
                 $error['trace'] = $e->getTraceAsString();
             }
             $response->getBody()->write(json_encode($error));
+
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     });

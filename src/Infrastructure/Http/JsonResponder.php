@@ -11,6 +11,7 @@ final class JsonResponder
     public static function respond(ResponseInterface $response, mixed $data, int $status = 200): ResponseInterface
     {
         $response->getBody()->write(json_encode($data));
+
         return $response->withStatus($status)->withHeader('Content-Type', 'application/json');
     }
 }

@@ -9,5 +9,6 @@ final readonly class CreateChatInput
     public function __construct(
         public int $userId,
         public string $title,
-    ) {}
+    ) {
+    }
 }

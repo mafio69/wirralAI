@@ -41,9 +41,9 @@ final readonly class TaskService
         $rows = $this->taskRepository->findByUserId($userId);
 
         return array_map(
-            fn (array $row) => new TaskResult(
-                id: (int) $row['id'],
-                userId: (int) $row['user_id'],
+            fn(array $row) => new TaskResult(
+                id: (int)$row['id'],
+                userId: (int)$row['user_id'],
                 title: $row['title'],
                 description: $row['description'],
                 status: $row['status'],
@@ -62,7 +62,7 @@ final readonly class TaskService
             throw new NotFoundException('Task not found');
         }
 
-        if ((int) $task['user_id'] !== $input->userId) {
+        if ((int)$task['user_id'] !== $input->userId) {
             throw new NotFoundException('Task not found');
         }
 
@@ -92,7 +92,7 @@ final readonly class TaskService
             throw new NotFoundException('Task not found');
         }
 
-        if ((int) $task['user_id'] !== $userId) {
+        if ((int)$task['user_id'] !== $userId) {
             throw new NotFoundException('Task not found');
         }
 

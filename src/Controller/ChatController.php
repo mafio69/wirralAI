@@ -20,7 +20,8 @@ final readonly class ChatController
         private readonly AddChatMessageInputMapper $addChatMessageInputMapper,
         private readonly ChatService $chatService,
         private readonly AuthService $authService,
-    ) {}
+    ) {
+    }
 
     public function list(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
@@ -30,46 +31,53 @@ final readonly class ChatController
         return JsonResponder::respond($response, $chats);
     }
 
+    private function getUserId(ServerRequestInterface $request): int
+    {
+        $token = $this->resolveToken($request);
+
+        return $this->authService->validateToken($token);
+    }
+
+    private function resolveToken(ServerRequestInterface $request): string
+    {
+        $header = $request->getHeaderLine('Authorization');
+        if (str_starts_with($header, 'Bearer ')) {
+            return substr($header, 7);
+        }
+
+        $cookies = $request->getCookieParams();
+        if (!empty($cookies['token'])) {
+            return $cookies['token'];
+        }
+
+        throw new UnauthorizedException('Missing or invalid Authorization header');
+    }
+
     public function create(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $userId = $this->getUserId($request);
-        $data = (array) $request->getParsedBody();
+        $data = (array)$request->getParsedBody();
         $input = $this->createChatInputMapper->map($data, $userId);
         $result = $this->chatService->createChat($input);
 
         return JsonResponder::respond($response, $result, 201);
     }
 
-    public function get(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    public function get(ServerRequestInterface $request, ResponseInterface $response, int $id): ResponseInterface
     {
         $userId = $this->getUserId($request);
-        $chatId = (int) ($args['id'] ?? 0);
-        $result = $this->chatService->getChatWithMessages($chatId, $userId);
+        $result = $this->chatService->getChatWithMessages($id, $userId);
 
         return JsonResponder::respond($response, $result);
     }
 
-    public function addMessage(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    public function addMessage(ServerRequestInterface $request, ResponseInterface $response, int $id): ResponseInterface
     {
         $userId = $this->getUserId($request);
-        $chatId = (int) ($args['id'] ?? 0);
-        $data = (array) $request->getParsedBody();
-        $input = $this->addChatMessageInputMapper->map($data, $chatId, $userId);
+        $data = (array)$request->getParsedBody();
+        $input = $this->addChatMessageInputMapper->map($data, $id, $userId);
         $result = $this->chatService->addMessage($input);
 
         return JsonResponder::respond($response, $result, 201);
-    }
-
-    private function getUserId(ServerRequestInterface $request): int
-    {
-        $authHeader = $request->getHeaderLine('Authorization');
-
-        if (!str_starts_with($authHeader, 'Bearer ')) {
-            throw new UnauthorizedException('Missing or invalid Authorization header');
-        }
-
-        $token = substr($authHeader, 7);
-
-        return $this->authService->validateToken($token);
     }
 }

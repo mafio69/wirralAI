@@ -8,6 +8,8 @@ final readonly class LoginResult
 {
     public function __construct(
         public int $userId,
-        public string $token
-    ) {}
+        public string $token,
+        public string $expiresAt,
+    ) {
+    }
 }

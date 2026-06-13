@@ -22,7 +22,7 @@ final readonly class CreateTaskInputMapper
 
         $allowed = ['todo', 'in_progress', 'done'];
         if (!in_array($status, $allowed, true)) {
-            throw new ValidationException('Invalid status. Allowed: ' . implode(', ', $allowed));
+            throw new ValidationException('Invalid status. Allowed: '.implode(', ', $allowed));
         }
 
         return new CreateTaskInput(
