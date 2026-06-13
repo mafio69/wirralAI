@@ -9,11 +9,14 @@ use App\Dto\Task\TaskResult;
 use App\Dto\Task\UpdateTaskInput;
 use App\Exception\NotFoundException;
 use App\Repository\TaskRepository;
+use Psr\Log\LoggerInterface;
 
 final readonly class TaskService
 {
-    public function __construct(private readonly TaskRepository $taskRepository)
-    {
+    public function __construct(
+        private readonly TaskRepository $taskRepository,
+        private readonly LoggerInterface $logger,
+    ) {
     }
 
     public function createTask(CreateTaskInput $input): TaskResult
@@ -24,6 +27,8 @@ final readonly class TaskService
             $input->description,
             $input->status,
         );
+
+        $this->logger->info('Task created', ['task_id' => $id, 'user_id' => $input->userId]);
 
         return new TaskResult(
             id: $id,
@@ -73,6 +78,8 @@ final readonly class TaskService
             $input->status,
         );
 
+        $this->logger->info('Task updated', ['task_id' => $input->taskId, 'user_id' => $input->userId]);
+
         return new TaskResult(
             id: $input->taskId,
             userId: $input->userId,
@@ -97,5 +104,7 @@ final readonly class TaskService
         }
 
         $this->taskRepository->delete($taskId);
+
+        $this->logger->info('Task deleted', ['task_id' => $taskId, 'user_id' => $userId]);
     }
 }

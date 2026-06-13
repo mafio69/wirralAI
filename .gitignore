@@ -2,4 +2,5 @@
 .env
 .local
 /var/database/
+/var/logs/
 /.idea/

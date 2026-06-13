@@ -10,18 +10,22 @@ use App\Dto\Chat\CreateChatInput;
 use App\Exception\NotFoundException;
 use App\Infrastructure\AI\OvhAiClient;
 use App\Repository\ChatRepository;
+use Psr\Log\LoggerInterface;
 
 final readonly class ChatService
 {
     public function __construct(
         private readonly ChatRepository $chatRepository,
         private readonly OvhAiClient $ovhAiClient,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
     public function createChat(CreateChatInput $input): ChatResult
     {
         $id = $this->chatRepository->create($input->userId, $input->title);
+
+        $this->logger->info('Chat created', ['chat_id' => $id, 'user_id' => $input->userId]);
 
         return new ChatResult(
             id: $id,
@@ -105,7 +109,12 @@ final readonly class ChatService
             ];
         }
 
-        $aiContent = $this->ovhAiClient->generate($messages);
+        try {
+            $aiContent = $this->ovhAiClient->generate($messages);
+        } catch (\Throwable $e) {
+            $this->logger->error('AI call failed', ['chat_id' => $input->chatId, 'exception' => $e]);
+            throw $e;
+        }
 
         $aiMessageId = $this->chatRepository->addMessage(
             $input->chatId,

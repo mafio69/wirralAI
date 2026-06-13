@@ -23,25 +23,14 @@ $dependencies($containerBuilder);
 
 $container = $containerBuilder->build();
 
+$logger = $container->get(\Psr\Log\LoggerInterface::class);
+
 // Run database migrations
 try {
     $migrationRunner = $container->get(\App\Infrastructure\Database\MigrationRunner::class);
     $migrationRunner->run();
-} catch (\DI\DependencyException $e) {
-    error_log('Migration dependency error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    error_log('Trace: ' . $e->getTraceAsString());
-    http_response_code(503);
-    require __DIR__ . '/error-pages/503.html';
-    exit(1);
-} catch (\DI\NotFoundException $e) {
-    error_log('Migration not found error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    error_log('Trace: ' . $e->getTraceAsString());
-    http_response_code(503);
-    require __DIR__ . '/error-pages/503.html';
-    exit(1);
-} catch (\Exception $e) {
-    error_log('Migration execution error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-    error_log('Trace: ' . $e->getTraceAsString());
+} catch (\Throwable $e) {
+    $logger->critical($e->getMessage(), ['exception' => $e]);
     http_response_code(503);
     require __DIR__ . '/error-pages/503.html';
     exit(1);

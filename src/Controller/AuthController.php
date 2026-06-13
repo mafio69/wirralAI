@@ -45,7 +45,7 @@ final class AuthController
             'expires' => strtotime($result->expiresAt),
             'path' => '/',
             'secure' => false,
-            'httponly' => true,
+            'httponly' => false,
             'samesite' => 'Lax',
         ]);
 

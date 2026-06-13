@@ -11,6 +11,7 @@ use App\Exception\UnauthorizedException;
 use App\Exception\ValidationException;
 use App\Infrastructure\Mail\MailService;
 use App\Repository\UserRepository;
+use Psr\Log\LoggerInterface;
 
 final readonly class AuthService
 {
@@ -18,6 +19,7 @@ final readonly class AuthService
         private readonly UserRepository $userRepository,
         private readonly MailService $mailService,
         private readonly string $appUrl,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -25,6 +27,7 @@ final readonly class AuthService
     {
         $existingUser = $this->userRepository->findByEmail($input->email);
         if ($existingUser) {
+            $this->logger->warning('Register failed: email taken', ['email' => $input->email]);
             throw new ValidationException('Email is already taken');
         }
 
@@ -37,6 +40,8 @@ final readonly class AuthService
         $link = $this->appUrl.'/api/auth/verify-email?token='.$token;
         $body = '<p>Kliknij w link aby potwierdzić email:</p><p><a href="'.$link.'">'.$link.'</a></p>';
         $this->mailService->send($input->email, 'Potwierdź rejestrację', $body);
+
+        $this->logger->info('User registered', ['email' => $input->email]);
     }
 
     public function login(LoginInput $input): LoginResult
@@ -44,6 +49,7 @@ final readonly class AuthService
         $user = $this->userRepository->findByEmail($input->email);
 
         if (!$user || !password_verify($input->password, $user['password_hash'])) {
+            $this->logger->warning('Login failed', ['email' => $input->email]);
             throw new UnauthorizedException('Invalid credentials');
         }
 
