@@ -185,6 +185,7 @@ tr:hover td { background: #f8f9fa; }
         <input type="text" id="chat-msg-input" placeholder="Treść wiadomości">
       </div>
       <button class="btn-primary" onclick="addMessage()">Wyślij</button>
+      <button class="btn-outline" id="toggle-send-enter" onclick="toggleSendOnEnter()">Enter: Wyślij</button>
     </div>
     <pre id="chat-msg-result" class="mt-2"></pre>
   </div>
@@ -387,6 +388,9 @@ function closeChatDetail() {
   document.getElementById('chat-detail').style.display = 'none';
 }
 
+// Zmienna do przechowywania ustawienia
+let sendOnEnter = true;
+
 async function addMessage() {
   if (!currentChatId) return;
   const content = document.getElementById('chat-msg-input').value;
@@ -396,6 +400,39 @@ async function addMessage() {
   if (r.ok) {
     document.getElementById('chat-msg-input').value = '';
     openChat(currentChatId);
+  }
+}
+
+// Obsługa klawiatury
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const input = document.getElementById('chat-msg-input');
+    if (document.activeElement === input) {
+      // Jeśli Shift+Enter, nie wysyłaj
+      if (e.shiftKey) {
+        // Pozostaw domyślne zachowanie (nowa linia)
+        return;
+      }
+      
+      // Wysyłaj wiadomość
+      if (sendOnEnter) {
+        e.preventDefault();
+        addMessage();
+      }
+    }
+  }
+});
+
+// Funkcja do przełączania ustawienia
+function toggleSendOnEnter() {
+  sendOnEnter = !sendOnEnter;
+  const btn = document.getElementById('toggle-send-enter');
+  if (sendOnEnter) {
+    btn.textContent = 'Enter: Wyślij';
+    btn.className = 'btn-primary';
+  } else {
+    btn.textContent = 'Enter: Nowa linia';
+    btn.className = 'btn-outline';
   }
 }
 
@@ -424,6 +461,10 @@ function esc(s) {
   }
 
   if (isAuth()) { listTasks(); listChats(); }
+
+  // Inicjalizacja ustawienia domyślnego
+  sendOnEnter = true;
+  toggleSendOnEnter();
 
   window.addEventListener('hashchange', function () {
     const section = window.location.hash.replace('#', '');
