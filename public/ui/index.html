@@ -410,7 +410,11 @@ async function openChat(id) {
       container.scrollTop = container.scrollHeight;
     }
   }
-  show(document.getElementById('chat-msg-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+  // Don't show API data in chat-msg-result when JSON view is active
+  const jsonResult = document.getElementById('chat-json-result');
+  if (jsonResult.style.display === 'none') {
+    show(document.getElementById('chat-msg-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
+  }
 }
 
 function closeChatDetail() {
