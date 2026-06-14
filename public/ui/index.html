@@ -174,14 +174,20 @@ tr:hover td { background: #f8f9fa; }
       <button class="btn-primary btn-sm" onclick="listChats()">Odśwież</button>
     </div>
     <div class="row mb-2">
-      <div class="field" style="flex:3">
+      <div class="field" style="flex:2">
         <label>Tytuł nowego czatu</label>
         <input type="text" id="chat-title" placeholder="Nazwa czatu">
+      </div>
+      <div class="field" style="flex:2">
+        <label>Model AI</label>
+        <select id="chat-model">
+          <option value="">Domyślny</option>
+        </select>
       </div>
       <button class="btn-primary" onclick="createChat()">Utwórz czat</button>
     </div>
     <table>
-      <thead><tr><th>ID</th><th>Tytuł</th><th>Utworzono</th><th>Akcje</th></tr></thead>
+      <thead><tr><th>ID</th><th>Tytuł</th><th>Model</th><th>Utworzono</th><th>Akcje</th></tr></thead>
       <tbody id="chats-tbody"></tbody>
     </table>
     <pre id="chats-result" class="mt-2"></pre>
@@ -200,12 +206,14 @@ tr:hover td { background: #f8f9fa; }
       </div>
       <button class="btn-primary" onclick="addMessage()" id="send-button">Wyślij</button>
       <button class="btn-outline" id="toggle-send-enter" onclick="toggleSendOnEnter()">Enter: Wyślij</button>
+      <button class="btn-outline" id="toggle-json-view" onclick="toggleJsonView()">Show JSON</button>
     </div>
     <div id="loading-indicator" style="display: none; margin-top: 10px;">
       <span class="loading"></span>
       <span>Oczekiwanie na odpowiedź AI...</span>
     </div>
     <pre id="chat-msg-result" class="mt-2"></pre>
+    <pre id="chat-json-result" class="mt-2" style="display: none;"></pre>
   </div>
 </div>
 
@@ -351,12 +359,13 @@ async function listChats() {
   tbody.innerHTML = '';
   if (r.ok && Array.isArray(r.data)) {
     if (r.data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty">Brak czatów</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty">Brak czatów</td></tr>';
     } else {
       r.data.forEach(c => {
         tbody.innerHTML += `<tr>
           <td>${c.id}</td>
           <td>${esc(c.title)}</td>
+          <td>${esc(c.model || 'Domyślny')}</td>
           <td>${esc(c.createdAt || '')}</td>
           <td><button class="btn-primary btn-sm" onclick="openChat(${c.id})">Otwórz</button></td>
         </tr>`;
@@ -369,10 +378,13 @@ async function listChats() {
 async function createChat() {
   if (!isAuth()) { show(document.getElementById('chats-result'), 'Zaloguj się', 'error'); return; }
   const title = document.getElementById('chat-title').value;
+  const model = document.getElementById('chat-model').value;
   if (!title) { show(document.getElementById('chats-result'), 'Podaj tytuł czatu', 'error'); return; }
-  const r = await api('POST', '/chats', { title });
+  const payload = { title };
+  if (model) payload.model = model;
+  const r = await api('POST', '/chats', payload);
   show(document.getElementById('chats-result'), r.ok ? r.data : r.data, r.ok ? 'success' : 'error');
-  if (r.ok) { listChats(); document.getElementById('chat-title').value = ''; }
+  if (r.ok) { listChats(); document.getElementById('chat-title').value = ''; document.getElementById('chat-model').value = ''; }
 }
 
 async function openChat(id) {
@@ -473,6 +485,49 @@ function esc(s) {
   return d.innerHTML;
 }
 
+function toggleJsonView() {
+  const chatDetail = document.getElementById('chat-detail');
+  const jsonResult = document.getElementById('chat-json-result');
+  const chatMessages = document.getElementById('chat-messages');
+  
+  if (jsonResult.style.display === 'none') {
+    // Show JSON view
+    jsonResult.style.display = 'block';
+    chatMessages.style.display = 'none';
+    document.getElementById('toggle-json-view').textContent = 'Hide JSON';
+    
+    // Load chat data as JSON
+    if (currentChatId) {
+      api('GET', '/chats/' + currentChatId).then(r => {
+        if (r.ok) {
+          show(jsonResult, r.data, 'success');
+        } else {
+          show(jsonResult, r.data, 'error');
+        }
+      });
+    }
+  } else {
+    // Hide JSON view
+    jsonResult.style.display = 'none';
+    chatMessages.style.display = 'block';
+    document.getElementById('toggle-json-view').textContent = 'Show JSON';
+  }
+}
+
+async function loadModels() {
+  const r = await api('GET', '/ai-models');
+  const select = document.getElementById('chat-model');
+  select.innerHTML = '<option value="">Domyślny</option>';
+  if (r.ok && Array.isArray(r.data)) {
+    r.data.forEach(m => {
+      const option = document.createElement('option');
+      option.value = m.id;
+      option.textContent = `${m.name} (${m.category})`;
+      select.appendChild(option);
+    });
+  }
+}
+
 // ==================== INIT ====================
 (function init() {
   if (!token) {
@@ -489,7 +544,11 @@ function esc(s) {
     showSection(section);
   }
 
-  if (isAuth()) { listTasks(); listChats(); }
+  if (isAuth()) { 
+    listTasks(); 
+    listChats(); 
+    loadModels();
+  }
 
   // Inicjalizacja ustawienia domyślnego
   sendOnEnter = true;
