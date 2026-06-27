@@ -12,6 +12,7 @@ final readonly class ChatResult
         public string $title,
         public string $createdAt,
         public ?array $messages = null,
+        public ?string $model = null,
     ) {
     }
 }

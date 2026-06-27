@@ -64,6 +64,7 @@ SQL;
 
         $this->addColumnIfNotExists('users', 'email_verification_token', 'TEXT DEFAULT NULL');
         $this->addColumnIfNotExists('users', 'email_confirmed_at', 'TEXT DEFAULT NULL');
+        $this->addColumnIfNotExists('chats', 'model', 'TEXT DEFAULT \'Qwen3-Coder-30B-A3B-Instruct\'');
     }
 
     private function addColumnIfNotExists(string $table, string $column, string $definition): void

@@ -1,0 +1,1 @@
+../.local/przykazaniaAi.md

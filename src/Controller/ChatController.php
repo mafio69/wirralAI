@@ -80,4 +80,36 @@ final readonly class ChatController
 
         return JsonResponder::respond($response, $result, 201);
     }
+    
+    public function listModels(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        // Fetch available models from OVH AI API
+        try {
+            $models = $this->chatService->getAvailableModels();
+            return JsonResponder::respond($response, $models);
+        } catch (\Throwable $e) {
+            // Fallback to static list if API fails
+            $models = [
+                [
+                    'id' => 'Qwen3-Coder-30B-A3B-Instruct',
+                    'name' => 'Qwen3-Coder-30B-A3B-Instruct',
+                    'description' => 'Advanced coding model optimized for code generation and debugging',
+                    'category' => 'code',
+                ],
+                [
+                    'id' => 'Qwen3-32B',
+                    'name' => 'Qwen3-32B',
+                    'description' => 'General purpose large language model',
+                    'category' => 'general',
+                ],
+                [
+                    'id' => 'Mistral-7B-Instruct-v0.3',
+                    'name' => 'Mistral-7B-Instruct-v0.3',
+                    'description' => 'Balanced model for general tasks',
+                    'category' => 'general',
+                ],
+            ];
+            return JsonResponder::respond($response, $models);
+        }
+    }
 }

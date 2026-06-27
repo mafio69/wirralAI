@@ -41,5 +41,8 @@ return function (App $app) {
         $group->post('/chats', [ChatController::class, 'create']);
         $group->get('/chats/{id}', [ChatController::class, 'get']);
         $group->post('/chats/{id}/messages', [ChatController::class, 'addMessage']);
+        
+        // AI Models
+        $group->get('/ai-models', [ChatController::class, 'listModels']);
     });
 };

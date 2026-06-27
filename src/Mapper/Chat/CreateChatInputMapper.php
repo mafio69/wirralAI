@@ -12,11 +12,12 @@ final readonly class CreateChatInputMapper
     public function map(array $data, int $userId): CreateChatInput
     {
         $title = $data['title'] ?? '';
+        $model = $data['model'] ?? null;
 
         if (!is_string($title) || trim($title) === '') {
             throw new ValidationException('Title is required');
         }
 
-        return new CreateChatInput($userId, trim($title));
+        return new CreateChatInput($userId, trim($title), $model);
     }
 }

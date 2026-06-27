@@ -46,6 +46,7 @@ return function (ContainerBuilder $containerBuilder) {
                 url: $config['url'],
                 token: $config['token'],
                 model: $config['model'],
+                timeout: $config['timeout'] ?? 120,
             );
         },
         MailService::class => function (ContainerInterface $c) {

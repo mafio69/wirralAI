@@ -59,6 +59,29 @@ final readonly class TaskService
         );
     }
 
+    public function getTaskById(int $taskId, int $userId): TaskResult
+    {
+        $task = $this->taskRepository->findById($taskId);
+
+        if (!$task) {
+            throw new NotFoundException('Task not found');
+        }
+
+        if ((int)$task['user_id'] !== $userId) {
+            throw new NotFoundException('Task not found');
+        }
+
+        return new TaskResult(
+            id: (int)$task['id'],
+            userId: (int)$task['user_id'],
+            title: $task['title'],
+            description: $task['description'],
+            status: $task['status'],
+            createdAt: $task['created_at'],
+            updatedAt: $task['updated_at'],
+        );
+    }
+
     public function updateTask(UpdateTaskInput $input): TaskResult
     {
         $task = $this->taskRepository->findById($input->taskId);

@@ -44,9 +44,9 @@ final class AuthController
         setcookie('token', $result->token, [
             'expires' => strtotime($result->expiresAt),
             'path' => '/',
-            'secure' => false,
-            'httponly' => false,
-            'samesite' => 'Lax',
+            'secure' => ($_ENV['APP_ENV'] ?? 'dev') === 'prod',
+            'httponly' => true,
+            'samesite' => ($_ENV['APP_ENV'] ?? 'dev') === 'prod' ? 'Strict' : 'Lax',
         ]);
 
         return JsonResponder::respond($response, [

@@ -12,15 +12,16 @@ final readonly class ChatRepository
     {
     }
 
-    public function create(int $userId, string $title): int
+    public function create(int $userId, string $title, ?string $model = null): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO chats (user_id, title, created_at) VALUES (:user_id, :title, :created_at)'
+            'INSERT INTO chats (user_id, title, created_at, model) VALUES (:user_id, :title, :created_at, :model)'
         );
         $stmt->execute([
             'user_id' => $userId,
             'title' => $title,
             'created_at' => date('Y-m-d H:i:s'),
+            'model' => $model ?? 'Qwen3-Coder-30B-A3B-Instruct',
         ]);
 
         return (int)$this->pdo->lastInsertId();
@@ -29,7 +30,7 @@ final readonly class ChatRepository
     public function findByUserId(int $userId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, user_id, title, created_at FROM chats WHERE user_id = :user_id ORDER BY created_at DESC'
+            'SELECT id, user_id, title, created_at, model FROM chats WHERE user_id = :user_id ORDER BY created_at DESC'
         );
         $stmt->execute(['user_id' => $userId]);
 
@@ -39,7 +40,7 @@ final readonly class ChatRepository
     public function findById(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, user_id, title, created_at FROM chats WHERE id = :id'
+            'SELECT id, user_id, title, created_at, model FROM chats WHERE id = :id'
         );
         $stmt->execute(['id' => $id]);
 

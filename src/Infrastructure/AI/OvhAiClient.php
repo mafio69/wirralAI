@@ -16,14 +16,15 @@ final readonly class OvhAiClient
         private string $url,
         private string $token,
         private string $model,
+        int $timeout = 120,
     ) {
         $this->httpClient = new Client([
             'base_uri' => $url,
-            'timeout' => 120,
+            'timeout' => $timeout,
         ]);
     }
 
-    public function generate(array $messages): string
+    public function generate(array $messages, ?string $model = null): string
     {
         try {
             $response = $this->httpClient->post('chat/completions', [
@@ -32,7 +33,7 @@ final readonly class OvhAiClient
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [
-                    'model' => $this->model,
+                    'model' => $model ?? $this->model,
                     'messages' => $messages,
                 ],
             ]);
@@ -43,5 +44,10 @@ final readonly class OvhAiClient
         } catch (GuzzleException $e) {
             throw new RuntimeException('AI request failed: '.$e->getMessage(), 0, $e);
         }
+    }
+
+    public function getBaseUrl(): string
+    {
+        return $this->url;
     }
 }
